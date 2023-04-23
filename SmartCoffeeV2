@@ -1,0 +1,300 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid = "Casa";
+const char* password = "C@sa212970";
+const char* hostname = "coffe.machine";
+bool coffeeIsDone = false; // declare coffeeIsDone as a boolean variable with an initial value of false
+int intervalId; // Define the variable 
+unsigned long startTime; // Global variable to store the start time
+const unsigned long INTERVAL = 1000; // Interval in milliseconds
+
+WebServer server(80);
+
+const int coffeeMachinePin = 23;
+
+const char* host = "coffe.machine";
+const char* endpoint = "/your_message_endpoint";
+
+// Declare function prototype
+void handleRoot();
+void handleSmall();
+void handleMedium();
+void handleLarge();
+void emergencyStop();
+
+void setup() {
+  Serial.begin(115200);
+  startTime = millis(); // Record the start time
+  pinMode(coffeeMachinePin, OUTPUT);
+  digitalWrite(coffeeMachinePin, LOW);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println("Hostname: ");
+  Serial.println(WiFi.getHostname());
+
+  server.on("/", handleRoot);
+  server.on("/small", handleSmall);
+  server.on("/medium", handleMedium);
+  server.on("/large", handleLarge);
+
+  // Add the following lines to define the event listener
+  server.begin();
+  Serial.println("Web server started");
+}
+
+void loop() {
+  server.handleClient();
+  unsigned long currentTime = millis();
+  if (currentTime - startTime >= INTERVAL) {
+    // Stop the progress bar
+    // (insert code here)
+    startTime = currentTime; // Reset the start time
+  if (coffeeIsDone) {
+    digitalWrite(coffeeMachinePin, LOW);  // Turn off the relay
+    Serial.println("Relay turned off");
+    coffeeIsDone = false;
+  }
+}
+
+}
+  void handleRoot() {
+        String html = "<html><head><title>SmartCoffee</title>";
+        html += "<meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+        html += "<body style='background-image: url(\"https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8NHx8fGVufDB8fHx8&w=1000&q=80\"); background-size: cover;'>";
+        html += "<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'>";
+        html += "<div class='container'>";
+        html += "<h1 class='text-center my-5'style='color: white;'>SmartCoffee</h1>";
+        html += "<div class='row'>";
+        html += "<div class='col-sm-6 mx-auto' style='margin: 0 auto;'>";
+        html += "<form method='get' action='/small'>";    
+        html += "<button class='btn btn-success btn-block' type='submit'>Café pequeno</button>";
+        html += "</form>";
+        html += "<form method='get' action='/medium'>";    
+        html += "<button class='btn btn-success btn-block' type='submit'>Café médio</button>";
+        html += "</form>";
+        html += "<form method='get' action='/large'>";    
+        html += "<button class='btn btn-success btn-block' type='submit'>Café grande</button>";
+        html += "</form>";
+        html += "<div style='display:flex;justify-content:center;align-items:center;height:100%;'>";
+        html += "<table class='table table-striped table-bordered mt-5 mx-auto' style='background-color: white;'>";
+        html += "<thead class='thead-light'>";
+        html += "<tr class='text-center'>";
+        html += "<th scope='col' class='text-center'>Tamanho</th>";
+        html += "<th scope='col' class='text-center'>Água (ml)</th>";
+        html += "<th scope='col' class='text-center'>Café (g)</th>";
+        html += "<th scope='col' class='text-center'>Colheres de sopa</th>";
+        html += "<th scope='col' class='text-center'>Tempo (s)</th>";
+        html += "</tr>";
+        html += "</thead>";
+        html += "<tbody>";
+        html += "<tr class='text-center'>";
+        html += "<td>Café pequeno</td>";
+        html += "<td>200</td>";
+        html += "<td>20</td>";
+        html += "<td>2</td>";
+        html += "<td>180 (3 minutos)</td>";
+        html += "</tr>";
+        html += "<tr class='text-center'>";
+        html += "<td>Café médio</td>";
+        html += "<td>600</td>";
+        html += "<td>60</td>";
+        html += "<td>5</td>";
+        html += "<td>240 (4 minutos)</td>";
+        html += "</tr>";
+        html += "<tr class='text-center'>";
+        html += "<td>Café grande</td>";
+        html += "<td>1000</td>";
+        html += "<td>100</td>";
+        html += "<td>9</td>";
+        html += "<td>420 (7 minutos)</td>";
+        html += "</tr>";
+        html += "</tbody>";
+        html += "</table></div>";
+        html += "</div></div></div>";
+        html += "</body></html>";
+        server.send(200, "text/html", html);  
+    }
+    
+
+        void handleSmall() {
+        digitalWrite(coffeeMachinePin, HIGH);
+        Serial.println("Café sendo preparado");
+        int duration = 180; // Duration in seconds
+        // Send a response to the client
+        String html = "<html><head><title>SmartCoffee</title>";
+        html += "<meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+        html += "<body style='background-image: url(\"https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8NHx8fGVufDB8fHx8&w=1000&q=80\"); background-size: cover;'>";
+        html += "<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'>";
+        html += "<script>";
+        html += "var duration = " + String(duration * 1000) + ";";
+        html += "var startTime = Date.now();";
+        html += "intervalId = setInterval(function() {";
+        html += "var progressBar = document.querySelector('.progress-bar');";
+        html += "var remainingTime = Math.max(duration - (Date.now() - startTime), 0);";
+        html += "var progressPercent = (duration - remainingTime) / duration * 100;";
+        html += "progressBar.style.width = progressPercent.toFixed(2) + '%';";
+        html += "progressBar.setAttribute('aria-valuenow', progressPercent.toFixed(2));";
+        html += "progressBar.innerText = Math.ceil(remainingTime / 1000) + 's';";
+        html += "if (remainingTime <= 0) { clearInterval(intervalId); digitalWrite(coffeeMachinePin, LOW); alert('CAFÉ PRONTO!'); new Audio('beep.mp3').play();}";
+        html += "}, 100);"; // Update the progress bar every 100 milliseconds
+        html += "</script>";
+        html += "</head><body class='bg-light'>";
+        html += "<div class='container my-5'>";
+        html += "<div class='card mx-auto' style='max-width: 500px;'>";
+        html += "<div class='card-header bg-success text-light'>";
+        html += "<h3 class='text-center'>SmartCoffee</h3>";
+        html += "</div>";
+        html += "<div class='card-body'>";
+        html += "<h4 class='text-center mb-3'>O café pequeno está sendo preparado...</h4>";
+        html += "<div class='progress mb-3' style='height: 30px;'>";
+        html += "<div class='progress-bar' role='progressbar' style='width: 0%;' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div>";
+        html += "</div>";
+        html += "<h4 class='text-center mb-3' id='coffeeReady' style='display:none'>CAFÉ PRONTO!</h4>";
+        html += "<script>setTimeout(function() {document.getElementById('coffeeReady').style.display='block';}, 180000);</script>";
+        html += "<h5 class='text-center'>Tempo de preparo: " + String(duration) + " segundos</h5>";
+        html += "</div>";
+        html += "</div>";
+        html += "</div>";
+        html += "<script src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>";
+        html += "<script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js'></script>";
+        html += "<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js'></script>";
+        //html += "<button class='btn btn-danger btn-block' onclick='emergencyStop(true)'>Parar emergência</button>";
+        html += "</body></html>";    
+        server.send(200, "text/html", html);
+        delay(180000); 
+        digitalWrite(coffeeMachinePin, LOW); // Turn off the coffee machine
+    }
+    
+   void handleMedium() {
+    digitalWrite(coffeeMachinePin, HIGH);
+        Serial.println("Café sendo preparado");
+        int duration = 240; // Duration in seconds
+        
+        // Send a response to the client
+        String html = "<html><head><title>SmartCoffee</title>";
+        html += "<meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+        html += "<body style='background-image: url(\"https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8NHx8fGVufDB8fHx8&w=1000&q=80\"); background-size: cover;'>";
+        html += "<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'>";
+        html += "<script>";
+        html += "var duration = " + String(duration * 1000) + ";";
+        html += "var startTime = Date.now();";
+        html += "setInterval(function() {";
+        html += "var progressBar = document.querySelector('.progress-bar');";
+        html += "var remainingTime = Math.max(duration - (Date.now() - startTime), 0);";
+        html += "var progressPercent = (duration - remainingTime) / duration * 100;";
+        html += "progressBar.style.width = progressPercent.toFixed(2) + '%';";
+        html += "progressBar.setAttribute('aria-valuenow', progressPercent.toFixed(2));";
+        html += "progressBar.innerText = Math.ceil(remainingTime / 1000) + 's';";
+        html += "if (remainingTime <= 0) { clearInterval(); }";
+        html += "}, 100);"; // Update the progress bar every 100 milliseconds
+        html += "</script>";
+        html += "</head><body class='bg-light'>";
+        html += "<div class='container my-5'>";
+        html += "<div class='card mx-auto' style='max-width: 500px;'>";
+        html += "<div class='card-header bg-success text-light'>";
+        html += "<h3 class='text-center'>SmartCoffee</h3>";
+        html += "</div>";
+        html += "<div class='card-body'>";
+        html += "<h4 class='text-center mb-3'>O café médio está sendo preparado...</h4>";
+        html += "<div class='progress mb-3' style='height: 30px;'>";
+        html += "<div class='progress-bar' role='progressbar' style='width: 0%;' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div>";
+        html += "</div>"; 
+        html += "<h4 class='text-center mb-3' id='coffeeReady' style='display:none'>CAFÉ PRONTO!</h4>";
+        html += "<script>setTimeout(function() {document.getElementById('coffeeReady').style.display='block';}, 240000);</script>";
+        html += "<h5 class='text-center'>Tempo de preparo: " + String(duration) + " segundos</h5>";
+        html += "</div>";
+        html += "</div>";
+        html += "</div>";
+        html += "<script src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>";
+        html += "<script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js'></script>";
+        html += "<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js'></script>";
+        //html += "<button class='btn btn-danger btn-block' onclick='emergencyStop()'>Parar emergência</button>";
+        html += "</body></html>";
+        server.send(200, "text/html", html);
+
+        delay(240000); 
+        digitalWrite(coffeeMachinePin, LOW); // Turn off the coffee machine
+        }
+
+    void handleLarge() {
+              
+        digitalWrite(coffeeMachinePin, HIGH);
+        Serial.println("Café sendo preparado");
+        int duration = 420; // Duration in seconds
+        
+        // Send a response to the client
+        String html = "<html><head><title>SmartCoffee</title>";
+        html += "<meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";        
+        html += "<body style='background-image: url(\"https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8NHx8fGVufDB8fHx8&w=1000&q=80\"); background-size: cover;'>";
+        html += "<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'>";
+        html += "<script>";
+        html += "var duration = " + String(duration * 1000) + ";";
+        html += "var startTime = Date.now();";
+        html += "setInterval(function() {";
+        html += "var progressBar = document.querySelector('.progress-bar');";
+        html += "var remainingTime = Math.max(duration - (Date.now() - startTime), 0);";
+        html += "var progressPercent = (duration - remainingTime) / duration * 100;";
+        html += "progressBar.style.width = progressPercent.toFixed(2) + '%';";
+        html += "progressBar.setAttribute('aria-valuenow', progressPercent.toFixed(2));";
+        html += "progressBar.innerText = Math.ceil(remainingTime / 1000) + 's';";
+        html += "if (remainingTime <= 0) { clearInterval(); }";
+        html += "}, 100);"; // Update the progress bar every 100 milliseconds
+        html += "</script>";
+        html += "</head><body class='bg-light'>";
+        html += "<div class='container my-5'>";
+        html += "<div class='card mx-auto' style='max-width: 500px;'>";
+        html += "<div class='card-header bg-success text-light'>";
+        html += "<h3 class='text-center'>SmartCoffee</h3>";
+        html += "</div>";
+        html += "<div class='card-body'>";
+        html += "<h4 class='text-center mb-3'>O café grande está sendo preparado...</h4>";
+        html += "<div class='progress mb-3' style='height: 30px;'>";
+        html += "<div class='progress-bar' role='progressbar' style='width: 0%;' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div>";
+        html += "</div>";
+        html += "<h4 class='text-center mb-3' id='coffeeReady' style='display:none'>CAFÉ PRONTO!</h4>";
+        html += "<script>setTimeout(function() {document.getElementById('coffeeReady').style.display='block';}, 420000);</script>";
+        html += "<h5 class='text-center'>Tempo de preparo: " + String(duration) + " segundos</h5>";
+        html += "</div>";
+        html += "</div>";
+        html += "</div>";
+        html += "<script src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>";
+        html += "<script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js'></script>";
+        html += "<script src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js'></script>";
+        //html += "<button class='btn btn-danger btn-block' onclick='emergencyStop()'>Parar emergência</button>";
+        html += "</body></html>";
+        server.send(200, "text/html", html);
+        delay(420000); 
+        digitalWrite(coffeeMachinePin, LOW); // Turn off the coffee machine
+
+        }
+
+
+    void sendCoffeeStatus(String statusMessage) {
+    WiFiClient client;
+    if (!client.connect(host, 80)) {
+        Serial.println("Connection failed");
+        return;
+    }
+
+
+    client.print(String("POST ") + endpoint + " HTTP/1.1\r\n" +
+                    "Host: " + host + "\r\n" +
+                    "Content-Type: application/json\r\n" +
+                    "Content-Length: " + statusMessage.length() + "\r\n" +
+                    "\r\n" + statusMessage + "\r\n");
+    Serial.println("Message sent");
+    client.stop();
+      }
