@@ -2,7 +2,7 @@
 #include <WebServer.h>
  
 const char* ssid = "Casa";
-const char* password = "C@sa212970";
+const char* password = "****";
 const char* hostname = "coffe.machine";
  
 WebServer server(80);
